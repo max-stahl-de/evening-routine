@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#6C5CE7">
+<title>Abendroutine</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --purple: #6C5CE7;
+    --pink: #FD79A8;
+    --yellow: #FDCB6E;
+    --green: #00B894;
+    --blue: #74B9FF;
+    --orange: #E17055;
+    --bg: #F8F7FF;
+    --card: #FFFFFF;
+    --text: #2D3436;
+    --text-light: #636E72;
+  }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100dvh;
+    overflow-x: hidden;
+    padding-bottom: env(safe-area-inset-bottom, 20px);
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, var(--purple), #a29bfe);
+    padding: 24px 20px 30px;
+    border-radius: 0 0 30px 30px;
+    text-align: center;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgba(108, 92, 231, 0.3);
+  }
+
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+    animation: shimmer 8s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(20px, -20px); }
+  }
+
+  .header h1 {
+    font-size: 24px;
+    font-weight: 900;
+    position: relative;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .header h1 .moon { display: inline-block; animation: moonBounce 2s ease-in-out infinite; }
+
+  @keyframes moonBounce {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-4px) rotate(10deg); }
+  }
+
+  /* Progress Ring */
+  .progress-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: -20px auto 0;
+    position: relative;
+    z-index: 2;
+  }
+
+  .progress-ring-container {
+    position: relative;
+    width: 160px;
+    height: 160px;
+    background: var(--card);
+    border-radius: 50%;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .progress-ring { transform: rotate(-90deg); }
+
+  .progress-ring-bg {
+    fill: none;
+    stroke: #f0ecff;
+    stroke-width: 8;
+  }
+
+  .progress-ring-fill {
+    fill: none;
+    stroke: url(#progressGradient);
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 377;
+    stroke-dashoffset: 377;
+    transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .progress-text {
+    position: absolute;
+    text-align: center;
+  }
+
+  .progress-text .points {
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--purple);
+    line-height: 1;
+  }
+
+  .progress-text .label {
+    font-size: 12px;
+    color: var(--text-light);
+    font-weight: 600;
+  }
+
+  .surprise-label {
+    margin-top: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--purple);
+    opacity: 0.7;
+  }
+
+  .surprises-earned {
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--pink);
+    font-weight: 700;
+  }
+
+  /* Date Navigation */
+  .date-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin: 20px 0 10px;
+    padding: 0 20px;
+  }
+
+  .date-nav button {
+    background: var(--card);
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 14px;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    color: var(--purple);
+    font-weight: 700;
+  }
+
+  .date-nav button:active { transform: scale(0.9); }
+  .date-nav button:disabled { opacity: 0.3; }
+
+  .date-display {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--text);
+    min-width: 200px;
+    text-align: center;
+  }
+
+  .date-display .weekday { color: var(--purple); }
+  .date-today-badge {
+    display: inline-block;
+    background: var(--green);
+    color: white;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    margin-left: 6px;
+    font-weight: 700;
+    vertical-align: middle;
+  }
+
+  /* Task Cards */
+  .tasks {
+    padding: 10px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .task-card {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2.5px solid transparent;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .task-card:active { transform: scale(0.97); }
+
+  .task-card.done {
+    border-color: var(--green);
+    background: linear-gradient(135deg, #f0fff4, #e8fdf5);
+  }
+
+  .task-card.done .task-icon { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+  @keyframes popIn {
+    0% { transform: scale(0.5); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+
+  .task-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    flex-shrink: 0;
+    transition: all 0.3s;
+  }
+
+  .task-icon.toilet { background: linear-gradient(135deg, #dfe6e9, #b2bec3); }
+  .task-icon.clothes { background: linear-gradient(135deg, #a29bfe, #6c5ce7); }
+  .task-icon.backpack { background: linear-gradient(135deg, #ffeaa7, #fdcb6e); }
+  .task-icon.teeth { background: linear-gradient(135deg, #81ecec, #00cec9); }
+
+  .task-info { flex: 1; }
+
+  .task-name {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.2;
+  }
+
+  .task-points {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-light);
+    margin-top: 2px;
+  }
+
+  .task-check {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    border: 2.5px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    flex-shrink: 0;
+  }
+
+  .task-card.done .task-check {
+    background: var(--green);
+    border-color: var(--green);
+  }
+
+  .task-check svg {
+    width: 18px;
+    height: 18px;
+    stroke: white;
+    stroke-width: 3;
+    fill: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .task-card.done .task-check svg { opacity: 1; }
+
+  /* Today Points */
+  .today-points {
+    text-align: center;
+    padding: 16px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-light);
+  }
+
+  .today-points span {
+    color: var(--purple);
+    font-size: 22px;
+  }
+
+  /* Confetti Canvas */
+  #confetti-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* Achievement Popup */
+  .achievement-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 20px;
+    backdrop-filter: blur(4px);
+  }
+
+  .achievement-overlay.show { display: flex; }
+
+  .achievement-card {
+    background: white;
+    border-radius: 30px;
+    padding: 40px 30px;
+    text-align: center;
+    max-width: 320px;
+    width: 100%;
+    animation: achievePop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+
+  @keyframes achievePop {
+    0% { transform: scale(0.3); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .achievement-card .star {
+    font-size: 72px;
+    animation: starSpin 1s ease-in-out;
+    display: inline-block;
+  }
+
+  @keyframes starSpin {
+    0% { transform: rotate(0deg) scale(0); }
+    50% { transform: rotate(180deg) scale(1.3); }
+    100% { transform: rotate(360deg) scale(1); }
+  }
+
+  .achievement-card h2 {
+    font-size: 26px;
+    font-weight: 900;
+    color: var(--purple);
+    margin: 12px 0 8px;
+  }
+
+  .achievement-card p {
+    font-size: 16px;
+    color: var(--text-light);
+    margin-bottom: 24px;
+    line-height: 1.4;
+  }
+
+  .achievement-card button {
+    background: linear-gradient(135deg, var(--purple), #a29bfe);
+    color: white;
+    border: none;
+    padding: 14px 40px;
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: 800;
+    font-family: 'Nunito', sans-serif;
+    cursor: pointer;
+    transition: transform 0.2s;
+    box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4);
+  }
+
+  .achievement-card button:active { transform: scale(0.95); }
+
+  /* History Button */
+  .history-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 4px 20px 20px;
+  }
+
+  .history-toggle button {
+    background: var(--card);
+    border: 2px solid #f0ecff;
+    padding: 10px 24px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Nunito', sans-serif;
+    color: var(--purple);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .history-toggle button:active { transform: scale(0.95); }
+
+  /* History */
+  .history {
+    padding: 0 16px 30px;
+    display: none;
+  }
+
+  .history.show { display: block; }
+
+  .history h3 {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 12px;
+    padding-left: 4px;
+  }
+
+  .history-day {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  }
+
+  .history-day .date {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .history-day .icons {
+    font-size: 16px;
+    letter-spacing: 4px;
+  }
+
+  .history-day .pts {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--purple);
+    min-width: 40px;
+    text-align: right;
+  }
+
+  /* Reset */
+  .reset-section {
+    text-align: center;
+    padding: 10px 20px 40px;
+  }
+
+  .reset-section button {
+    background: none;
+    border: none;
+    color: #b2bec3;
+    font-size: 12px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px 16px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1><span class="moon">🌙</span> Abendroutine</h1>
+</div>
+
+<div class="progress-section">
+  <div class="progress-ring-container">
+    <svg class="progress-ring" width="140" height="140" viewBox="0 0 140 140">
+      <defs>
+        <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#6C5CE7" />
+          <stop offset="100%" style="stop-color:#FD79A8" />
+        </linearGradient>
+      </defs>
+      <circle class="progress-ring-bg" cx="70" cy="70" r="60" />
+      <circle class="progress-ring-fill" cx="70" cy="70" r="60" />
+    </svg>
+    <div class="progress-text">
+      <div class="points" id="runningPoints">0</div>
+      <div class="label">von 100</div>
+    </div>
+  </div>
+  <div class="surprise-label">bis zur Ueberraschung</div>
+  <div class="surprises-earned" id="surprisesEarned"></div>
+</div>
+
+<div class="date-nav">
+  <button id="prevDay">&#8249;</button>
+  <div class="date-display" id="dateDisplay"></div>
+  <button id="nextDay">&#8250;</button>
+</div>
+
+<div class="tasks" id="tasks"></div>
+
+<div class="today-points">
+  Heute: <span id="todayPoints">0</span> / 10 Punkte
+</div>
+
+<div class="history-toggle">
+  <button id="historyBtn">Letzte Tage anzeigen</button>
+</div>
+
+<div class="history" id="history"></div>
+
+<div class="reset-section">
+  <button id="resetBtn">Alle Daten zuruecksetzen</button>
+</div>
+
+<canvas id="confetti-canvas"></canvas>
+
+<div class="achievement-overlay" id="achievementOverlay">
+  <div class="achievement-card">
+    <div class="star">⭐</div>
+    <h2>Ueberraschung!</h2>
+    <p>Du hast 100 Punkte gesammelt!<br>Du bekommst eine kleine Ueberraschung!</p>
+    <button id="achieveClose">Super!</button>
+  </div>
+</div>
+
+<script>
+const TASKS = [
+  { id: 'toilet',   name: 'Auf Toilette gehen',  points: 3, icon: '🚽', iconClass: 'toilet' },
+  { id: 'clothes',  name: 'Umziehen',             points: 4, icon: '👕', iconClass: 'clothes' },
+  { id: 'backpack', name: 'Schulranzen packen',   points: 1, icon: '🎒', iconClass: 'backpack' },
+  { id: 'teeth',    name: 'Zaehne putzen',        points: 2, icon: '🪥', iconClass: 'teeth' },
+];
+
+const WEEKDAYS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+const MONTHS = ['Jan', 'Feb', 'Maer', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+
+let currentDate = new Date();
+let data = {};
+let totalPoints = 0;
+let surprises = 0;
+
+function dateKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function isToday(d) {
+  const t = new Date();
+  return d.getFullYear() === t.getFullYear() && d.getMonth() === t.getMonth() && d.getDate() === t.getDate();
+}
+
+function isFuture(d) {
+  const t = new Date();
+  t.setHours(0,0,0,0);
+  const check = new Date(d);
+  check.setHours(0,0,0,0);
+  return check > t;
+}
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem('abendroutine_data');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      data = parsed.days || {};
+      totalPoints = parsed.totalPoints || 0;
+      surprises = parsed.surprises || 0;
+    }
+  } catch(e) { data = {}; totalPoints = 0; surprises = 0; }
+}
+
+function saveData() {
+  localStorage.setItem('abendroutine_data', JSON.stringify({
+    days: data,
+    totalPoints,
+    surprises
+  }));
+}
+
+function getDayPoints(key) {
+  if (!data[key]) return 0;
+  return TASKS.reduce((sum, t) => sum + (data[key][t.id] ? t.points : 0), 0);
+}
+
+function getRunningPoints() {
+  return totalPoints % 100;
+}
+
+function updateProgressRing() {
+  const running = getRunningPoints();
+  const circumference = 2 * Math.PI * 60; // 377
+  const offset = circumference - (running / 100) * circumference;
+  document.querySelector('.progress-ring-fill').style.strokeDashoffset = offset;
+  document.getElementById('runningPoints').textContent = running;
+
+  const el = document.getElementById('surprisesEarned');
+  if (surprises > 0) {
+    el.textContent = `⭐ ${surprises} Ueberraschung${surprises > 1 ? 'en' : ''} verdient!`;
+  } else {
+    el.textContent = '';
+  }
+}
+
+function renderDate() {
+  const d = currentDate;
+  const wd = WEEKDAYS[d.getDay()];
+  const day = d.getDate();
+  const mon = MONTHS[d.getMonth()];
+  let html = `<span class="weekday">${wd}</span>, ${day}. ${mon}`;
+  if (isToday(d)) html += `<span class="date-today-badge">Heute</span>`;
+  document.getElementById('dateDisplay').innerHTML = html;
+
+  document.getElementById('nextDay').disabled = isToday(d);
+}
+
+function renderTasks() {
+  const key = dateKey(currentDate);
+  const dayData = data[key] || {};
+  const future = isFuture(currentDate);
+  const container = document.getElementById('tasks');
+
+  container.innerHTML = TASKS.map(t => `
+    <div class="task-card ${dayData[t.id] ? 'done' : ''} ${future ? 'future' : ''}"
+         data-task="${t.id}" ${future ? '' : 'onclick="toggleTask(this)"'}>
+      <div class="task-icon ${t.iconClass}">${t.icon}</div>
+      <div class="task-info">
+        <div class="task-name">${t.name}</div>
+        <div class="task-points">${t.points} Punkt${t.points > 1 ? 'e' : ''}</div>
+      </div>
+      <div class="task-check">
+        <svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"></polyline></svg>
+      </div>
+    </div>
+  `).join('');
+
+  const dayPts = getDayPoints(key);
+  document.getElementById('todayPoints').textContent = dayPts;
+}
+
+function toggleTask(el) {
+  const taskId = el.dataset.task;
+  const key = dateKey(currentDate);
+  if (!data[key]) data[key] = {};
+
+  const task = TASKS.find(t => t.id === taskId);
+  const wasDone = !!data[key][taskId];
+  const prevRunning = getRunningPoints();
+
+  if (wasDone) {
+    data[key][taskId] = false;
+    totalPoints -= task.points;
+    if (totalPoints < 0) totalPoints = 0;
+  } else {
+    data[key][taskId] = true;
+    totalPoints += task.points;
+  }
+
+  saveData();
+  renderTasks();
+  updateProgressRing();
+
+  // Check if we crossed a 100 boundary
+  if (!wasDone) {
+    const newRunning = getRunningPoints();
+    if (newRunning < prevRunning + task.points && totalPoints >= 100) {
+      // We crossed 100!
+      surprises++;
+      saveData();
+      updateProgressRing();
+      setTimeout(() => showAchievement(), 300);
+    }
+  }
+}
+
+function showAchievement() {
+  document.getElementById('achievementOverlay').classList.add('show');
+  fireConfetti();
+}
+
+document.getElementById('achieveClose').addEventListener('click', () => {
+  document.getElementById('achievementOverlay').classList.remove('show');
+});
+
+document.getElementById('achievementOverlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) {
+    document.getElementById('achievementOverlay').classList.remove('show');
+  }
+});
+
+document.getElementById('prevDay').addEventListener('click', () => {
+  currentDate = new Date(currentDate);
+  currentDate.setDate(currentDate.getDate() - 1);
+  renderDate();
+  renderTasks();
+});
+
+document.getElementById('nextDay').addEventListener('click', () => {
+  if (!isToday(currentDate)) {
+    currentDate = new Date(currentDate);
+    currentDate.setDate(currentDate.getDate() + 1);
+    renderDate();
+    renderTasks();
+  }
+});
+
+// History
+let historyVisible = false;
+document.getElementById('historyBtn').addEventListener('click', () => {
+  historyVisible = !historyVisible;
+  const el = document.getElementById('history');
+  const btn = document.getElementById('historyBtn');
+  if (historyVisible) {
+    el.classList.add('show');
+    btn.textContent = 'Verlauf ausblenden';
+    renderHistory();
+  } else {
+    el.classList.remove('show');
+    btn.textContent = 'Letzte Tage anzeigen';
+  }
+});
+
+function renderHistory() {
+  const el = document.getElementById('history');
+  const days = [];
+  const today = new Date();
+  for (let i = 1; i <= 14; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const key = dateKey(d);
+    if (data[key]) {
+      const pts = getDayPoints(key);
+      const icons = TASKS.map(t => data[key][t.id] ? t.icon : '').join('');
+      days.push({
+        date: `${WEEKDAYS[d.getDay()]}, ${d.getDate()}. ${MONTHS[d.getMonth()]}`,
+        icons,
+        pts
+      });
+    }
+  }
+
+  if (days.length === 0) {
+    el.innerHTML = '<h3>Verlauf</h3><p style="color:#b2bec3;text-align:center;padding:20px;">Noch keine Eintraege</p>';
+    return;
+  }
+
+  el.innerHTML = `<h3>Verlauf</h3>` + days.map(d => `
+    <div class="history-day">
+      <div class="date">${d.date}</div>
+      <div class="icons">${d.icons}</div>
+      <div class="pts">${d.pts}P</div>
+    </div>
+  `).join('');
+}
+
+// Reset
+document.getElementById('resetBtn').addEventListener('click', () => {
+  if (confirm('Wirklich alle Daten loeschen? Das kann nicht rueckgaengig gemacht werden.')) {
+    localStorage.removeItem('abendroutine_data');
+    data = {};
+    totalPoints = 0;
+    surprises = 0;
+    renderTasks();
+    updateProgressRing();
+    if (historyVisible) renderHistory();
+  }
+});
+
+// Confetti
+function fireConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const particles = [];
+  const colors = ['#6C5CE7','#FD79A8','#FDCB6E','#00B894','#74B9FF','#E17055','#FF6B6B','#A29BFE'];
+
+  for (let i = 0; i < 150; i++) {
+    particles.push({
+      x: canvas.width / 2 + (Math.random() - 0.5) * 100,
+      y: canvas.height / 2,
+      vx: (Math.random() - 0.5) * 20,
+      vy: (Math.random() - 1) * 20 - 5,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      size: Math.random() * 8 + 4,
+      rotation: Math.random() * 360,
+      rotSpeed: (Math.random() - 0.5) * 10,
+      gravity: 0.3,
+      opacity: 1,
+      shape: Math.random() > 0.5 ? 'rect' : 'circle'
+    });
+  }
+
+  let frame = 0;
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.vy += p.gravity;
+      p.y += p.vy;
+      p.rotation += p.rotSpeed;
+      p.vx *= 0.99;
+
+      if (frame > 40) p.opacity -= 0.015;
+      if (p.opacity <= 0) return;
+      alive = true;
+
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, p.opacity);
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation * Math.PI / 180);
+      ctx.fillStyle = p.color;
+
+      if (p.shape === 'rect') {
+        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+      } else {
+        ctx.beginPath();
+        ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    });
+
+    frame++;
+    if (alive) requestAnimationFrame(animate);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  animate();
+}
+
+// Init
+loadData();
+renderDate();
+renderTasks();
+updateProgressRing();
+</script>
+</body>
+</html>
